@@ -84,3 +84,9 @@ shared rate limits, the service tries a short ordered list of free models and fa
 static insight pool (keyed by risk tolerance, rotating daily) if all of them fail or no API key
 is configured. Verified: live call returns a generated insight flagged `source:"live"`; a forced
 failure of the live call returns the static fallback flagged `source:"fallback"`.
+
+### Phase 7 — Dashboard: Meme
+`GET /api/dashboard/meme`, serving one entry from a curated static pool of crypto memes
+(`memes.json`), rotating by day of month. By design there is no live external API for this
+section — the static pool is the primary source, not a fallback. Verified: the endpoint returns
+a valid item with `id`, `imageUrl`, and `caption`.

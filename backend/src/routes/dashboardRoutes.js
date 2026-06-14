@@ -8,3 +8,4 @@ dashboardRoutes.use(requireAuth);
 dashboardRoutes.get("/news", dashboardController.getNews);
 dashboardRoutes.get("/prices", dashboardController.getPrices);
 dashboardRoutes.get("/insight", dashboardController.getInsight);
+dashboardRoutes.get("/meme", dashboardController.getMeme);

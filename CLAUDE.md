@@ -131,6 +131,6 @@ calls) separation. Controllers never call external APIs directly; services never
 - [x] Step 4: Dashboard — News
 - [x] Step 5: Dashboard — Prices
 - [x] Step 6: Dashboard — AI Insight
-- [ ] Step 7: Dashboard — Meme
+- [x] Step 7: Dashboard — Meme
 - [ ] Step 8: Voting
 - [ ] Step 9: Frontend
