@@ -6,6 +6,7 @@ import { requireAuth } from "./middleware/requireAuth.js";
 import { authRoutes } from "./routes/authRoutes.js";
 import { preferencesRoutes } from "./routes/preferencesRoutes.js";
 import { dashboardRoutes } from "./routes/dashboardRoutes.js";
+import { voteRoutes } from "./routes/voteRoutes.js";
 
 export const app = express();
 
@@ -24,5 +25,6 @@ app.get("/api/auth/me", requireAuth, (req, res) => {
 
 app.use("/api/preferences", preferencesRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/votes", voteRoutes);
 
 app.use(errorHandler);

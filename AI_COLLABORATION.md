@@ -90,3 +90,10 @@ failure of the live call returns the static fallback flagged `source:"fallback"`
 (`memes.json`), rotating by day of month. By design there is no live external API for this
 section — the static pool is the primary source, not a fallback. Verified: the endpoint returns
 a valid item with `id`, `imageUrl`, and `caption`.
+
+### Phase 8 — Voting
+`POST`/`GET /api/votes`, backed by `voteService.js`. Voting upserts on the unique
+`(userId, section, itemId)` index defined back in Phase 1, so re-voting the same item updates
+the existing document rather than creating a duplicate. Verified: a first POST creates a vote, a
+second POST with a different value updates the same document in place (same `_id`, new `value`),
+and GET returns the current state for the user.
