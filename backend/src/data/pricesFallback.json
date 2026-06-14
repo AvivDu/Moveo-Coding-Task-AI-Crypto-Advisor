@@ -1,0 +1,34 @@
+[
+  {
+    "id": "bitcoin",
+    "symbol": "btc",
+    "name": "Bitcoin",
+    "price": 67250.42,
+    "change24h": 1.8,
+    "image": "https://assets.coingecko.com/coins/images/1/large/bitcoin.png"
+  },
+  {
+    "id": "ethereum",
+    "symbol": "eth",
+    "name": "Ethereum",
+    "price": 3520.17,
+    "change24h": -0.6,
+    "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"
+  },
+  {
+    "id": "solana",
+    "symbol": "sol",
+    "name": "Solana",
+    "price": 168.93,
+    "change24h": 3.2,
+    "image": "https://assets.coingecko.com/coins/images/4128/large/solana.png"
+  },
+  {
+    "id": "cardano",
+    "symbol": "ada",
+    "name": "Cardano",
+    "price": 0.452,
+    "change24h": -1.1,
+    "image": "https://assets.coingecko.com/coins/images/975/large/cardano.png"
+  }
+]

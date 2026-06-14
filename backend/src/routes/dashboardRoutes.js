@@ -6,3 +6,4 @@ export const dashboardRoutes = Router();
 
 dashboardRoutes.use(requireAuth);
 dashboardRoutes.get("/news", dashboardController.getNews);
+dashboardRoutes.get("/prices", dashboardController.getPrices);
