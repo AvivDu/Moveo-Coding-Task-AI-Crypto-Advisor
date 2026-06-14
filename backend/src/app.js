@@ -5,6 +5,7 @@ import { errorHandler } from "./middleware/errorHandler.js";
 import { requireAuth } from "./middleware/requireAuth.js";
 import { authRoutes } from "./routes/authRoutes.js";
 import { preferencesRoutes } from "./routes/preferencesRoutes.js";
+import { dashboardRoutes } from "./routes/dashboardRoutes.js";
 
 export const app = express();
 
@@ -22,5 +23,6 @@ app.get("/api/auth/me", requireAuth, (req, res) => {
 });
 
 app.use("/api/preferences", preferencesRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.use(errorHandler);
