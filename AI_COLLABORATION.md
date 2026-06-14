@@ -97,3 +97,20 @@ a valid item with `id`, `imageUrl`, and `caption`.
 the existing document rather than creating a duplicate. Verified: a first POST creates a vote, a
 second POST with a different value updates the same document in place (same `_id`, new `value`),
 and GET returns the current state for the user.
+
+### Phase 9 — Frontend
+A React (Vite) SPA in `frontend/`. A single `apiRequest` helper (`api/client.js`) wraps `fetch`
+with the JSON body/headers and base URL; `useApi` layers in the Bearer token from
+`AuthContext`. `AuthContext` holds the JWT and user object (persisted to `localStorage`) and
+exposes `signup`/`login`/`logout`. Routing (`react-router-dom`) covers `/login`, `/signup`,
+`/onboarding`, and `/dashboard`, with `ProtectedRoute`/`OnboardingRoute` redirecting based on
+auth state and `hasCompletedOnboarding`. The onboarding page is a single form covering all six
+preference fields (experience level, risk tolerance, investment horizon, investment goal,
+favorite coins, interests) and PUTs them in one request. The dashboard loads all four section
+endpoints plus `/api/votes` in parallel, renders one card component per section
+(`NewsCard`, `PricesCard`, `InsightCard`, `MemeCard`), and a shared `VoteButtons` component posts
+to `/api/votes` and updates local state optimistically. Verified: full flow in the browser —
+signup → onboarding → dashboard renders all four cards (News flagged `source:"fallback"` since no
+CryptoPanic key is configured, Prices and AI Insight live) → thumbs up/down on multiple items
+survives a page reload → log out and log back in skips onboarding and goes straight to the
+dashboard with votes intact.

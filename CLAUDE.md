@@ -103,17 +103,17 @@ calls) separation. Controllers never call external APIs directly; services never
 
 ## 6. Success Criteria Checklist
 
-- [ ] Server boots, connects to Atlas, `/api/health` green.
-- [ ] Signup/login issue and verify JWTs; protected routes reject missing/invalid tokens.
-- [ ] Preferences upsert + read; onboarding flag set.
-- [ ] News returns live data **and** a proven static fallback.
-- [ ] Prices returns favorite-coin live data **and** a proven static fallback.
-- [ ] AI Insight returns live text **and** a proven static fallback.
-- [ ] Meme always returns a valid item from the static pool.
-- [ ] Voting upserts (no duplicates), reads back, survives reload.
-- [ ] Frontend: responsive, componentized, all four cards populated, voting works end-to-end.
-- [ ] No code comments anywhere; controllers/services separated; commits plain (no AI attribution).
-- [ ] `AI_COLLABORATION.md` maintained per phase.
+- [x] Server boots, connects to Atlas, `/api/health` green.
+- [x] Signup/login issue and verify JWTs; protected routes reject missing/invalid tokens.
+- [x] Preferences upsert + read; onboarding flag set.
+- [x] News returns live data **and** a proven static fallback.
+- [x] Prices returns favorite-coin live data **and** a proven static fallback.
+- [x] AI Insight returns live text **and** a proven static fallback.
+- [x] Meme always returns a valid item from the static pool.
+- [x] Voting upserts (no duplicates), reads back, survives reload.
+- [x] Frontend: responsive, componentized, all four cards populated, voting works end-to-end.
+- [x] No code comments anywhere; controllers/services separated; commits plain (no AI attribution).
+- [x] `AI_COLLABORATION.md` maintained per phase.
 
 ## 7. Resolved Decisions
 
@@ -133,4 +133,4 @@ calls) separation. Controllers never call external APIs directly; services never
 - [x] Step 6: Dashboard — AI Insight
 - [x] Step 7: Dashboard — Meme
 - [x] Step 8: Voting
-- [ ] Step 9: Frontend
+- [x] Step 9: Frontend
