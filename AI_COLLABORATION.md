@@ -46,4 +46,41 @@ started, so the build follows a fixed plan rather than being figured out ad hoc.
 
 ## Build Phases
 
-Each phase below will be appended after the corresponding module is implemented and verified.
+### Phase 1 — App Skeleton + DB Models + Shared Utils
+Express app with CORS/JSON middleware and a health check, Mongoose connection to MongoDB Atlas,
+the `User`, `Preferences`, and `Vote` schemas (with the unique compound index on `Vote` for
+upsert-based voting), and the shared `AppError` / `fetchExternal` utilities used by every later
+module. Verified: server boots, connects to Atlas, `/api/health` returns 200.
+
+### Phase 2 — Auth
+Signup and login routes with bcrypt password hashing and JWT issuance, plus the `requireAuth`
+middleware that all protected routes depend on. Verified: signup creates a hashed-password user
+and returns a token; login round-trips; a protected probe route returns 401 without a token and
+200 with one; duplicate signup returns 409.
+
+### Phase 3 — Onboarding / Preferences
+`GET`/`PUT /api/preferences`, upserting a `Preferences` document and flipping
+`hasCompletedOnboarding` on first save. Verified: GET returns `null` before onboarding, PUT
+upserts and returns the saved preferences, and a subsequent login reflects
+`hasCompletedOnboarding: true`.
+
+### Phase 4 — Dashboard: News
+`GET /api/dashboard/news`, backed by a CryptoPanic integration that falls back to a static
+headline set whenever the API key is absent, the live call returns nothing, or it errors.
+Verified: with no CryptoPanic key configured, the endpoint returns the static items flagged
+`source:"fallback"`.
+
+### Phase 5 — Dashboard: Prices
+`GET /api/dashboard/prices`, pulling the user's `favoriteCoins` from their preferences (or a
+default coin set) and querying CoinGecko's `coins/markets` endpoint, with a static snapshot as
+fallback. Verified: live call returns real-time prices for the user's saved favorites; a forced
+failure of the live call returns the static fallback flagged `source:"fallback"`.
+
+### Phase 6 — Dashboard: AI Insight
+`GET /api/dashboard/insight`, generating a short market insight via OpenRouter, with the prompt
+shaped by the user's experience level, risk tolerance, interests, investment horizon, and goal.
+Because free-tier model availability on OpenRouter shifts and individual free models can hit
+shared rate limits, the service tries a short ordered list of free models and falls back to a
+static insight pool (keyed by risk tolerance, rotating daily) if all of them fail or no API key
+is configured. Verified: live call returns a generated insight flagged `source:"live"`; a forced
+failure of the live call returns the static fallback flagged `source:"fallback"`.

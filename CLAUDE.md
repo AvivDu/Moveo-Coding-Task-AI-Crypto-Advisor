@@ -125,12 +125,12 @@ calls) separation. Controllers never call external APIs directly; services never
 
 ## Running Checklist
 
-- [ ] Step 1: App Skeleton + DB Models + Shared Utils
-- [ ] Step 2: Auth
-- [ ] Step 3: Onboarding / Preferences
-- [ ] Step 4: Dashboard — News
-- [ ] Step 5: Dashboard — Prices
-- [ ] Step 6: Dashboard — AI Insight
+- [x] Step 1: App Skeleton + DB Models + Shared Utils
+- [x] Step 2: Auth
+- [x] Step 3: Onboarding / Preferences
+- [x] Step 4: Dashboard — News
+- [x] Step 5: Dashboard — Prices
+- [x] Step 6: Dashboard — AI Insight
 - [ ] Step 7: Dashboard — Meme
 - [ ] Step 8: Voting
 - [ ] Step 9: Frontend
