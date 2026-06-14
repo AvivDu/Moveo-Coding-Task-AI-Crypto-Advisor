@@ -1,116 +1,154 @@
 # AI Collaboration Log
 
-This log records the engineering decisions made while building the AI Crypto Advisor, and how
-AI tooling was used to execute them.
+This log is written from my (the AI's) perspective, documenting how this project was built in
+collaboration with the operator. It's not a changelog of *what* was built — the commit history
+already covers that — it's a record of *how* we worked: what the operator specified or decided,
+what they asked me to explain or justify, where they corrected my output or pushed back, and
+where they handed me a contract and let me execute against it. Keeping this log itself was one
+of the operator's decisions, made specifically so an interviewer can see how the architecture and
+decisions in this repo actually originated.
+
+The operator's background is C#/.NET, with no prior Node/Express/Mongoose or React experience,
+and no SQL background either. They told me this up front and asked me to explain
+Node/Express/Mongoose concepts in terms of ASP.NET Core/EF equivalents throughout the build,
+treating this as a learning exercise rather than a black box.
 
 ## Planning Phase
 
-Before any code was written, a full module breakdown, API contracts, dependency graph, and
-build order were drafted (see `CLAUDE.md`). This was reviewed and approved before implementation
-started, so the build follows a fixed plan rather than being figured out ad hoc.
+Before I wrote any code, the operator asked me to draft a full module breakdown, API contracts,
+dependency graph, and build order as `CLAUDE.md`. They reviewed it, asked clarifying questions
+about the proposed stack and auth approach, and only approved it once they were comfortable. The
+build then followed that fixed plan module-by-module — every phase below maps to a row in that
+plan.
 
-### Key decisions
+### Decisions the operator drove, and what they asked me
 
-- **Express + Node over .NET/C#**: the operator's primary background is C#/.NET, but the
-  assignment scoped the stack to a JS-based free-tier-friendly toolchain (Vercel/Railway
-  deploy targets, MongoDB Atlas free tier). The operator chose to use this as a learning
-  opportunity rather than working in a familiar stack, and asked that Node/Express/Mongoose
-  concepts be explained in terms of their ASP.NET/EF equivalents throughout the build.
-- **MongoDB over a relational DB**: no SQL background either, but MongoDB Atlas's free tier and
-  Mongoose's schema model were judged a good fit for the relatively simple, mostly-flat data
-  shapes here (User, Preferences, Vote).
-- **JWT via Authorization Bearer header, not httpOnly cookies**: the frontend (Vercel) and
-  backend (Railway) are deployed on different origins. The operator chose Bearer-header JWT
-  specifically to avoid cross-origin cookie/CORS configuration (SameSite, Secure, credentialed
-  requests), trading some XSS-resistance for a simpler, more explainable auth flow.
-- **Static fallback on every external API section**: the operator required that News, Prices,
-  AI Insight, and Meme each degrade to a static JSON response if the live API fails or a key is
-  missing, so a deployed demo never shows a broken or empty card. This was treated as a hard
-  requirement, not a nice-to-have.
-- **OpenRouter for AI Insight**: chosen over Hugging Face Inference because the operator already
-  has an OpenRouter account/key and judged it more reliable on the free tier.
-- **CryptoPanic deferred**: the operator does not yet have a CryptoPanic key. The News module is
-  built and verified end-to-end against its static fallback; the live integration requires only
-  adding the API key as an environment variable later, no code changes.
-- **Onboarding quiz fields**: beyond the baseline (experience level, risk tolerance, favorite
-  coins, interests), the operator added `investmentHorizon` and `investmentGoal` to give the AI
-  Insight more signal for tailoring tone and advice.
+- **Express + Node over .NET/C#**: the assignment scoped the stack to a JS-based,
+  free-tier-friendly toolchain (Vercel/Railway, MongoDB Atlas free tier). The operator chose to
+  treat this as a learning opportunity rather than insisting on a familiar stack, but asked me to
+  map Node/Express/Mongoose concepts to ASP.NET Core/EF equivalents (middleware ~ pipeline,
+  Mongoose schema ~ EF entity, controller/service split ~ the layering they already knew) so they
+  could follow my reasoning, not just accept my code.
+- **MongoDB over a relational DB**: the operator raised that they have no SQL background either.
+  I proposed MongoDB Atlas's free tier plus Mongoose's schema model as a reasonable fit for the
+  relatively simple, mostly-flat data here (User, Preferences, Vote), framing Mongoose's
+  schema-level validation as close to the EF model they already knew. They agreed.
+- **JWT via `Authorization: Bearer`, not httpOnly cookies**: I presented this as a real tradeoff —
+  cookies are more XSS-resistant, but the frontend (Vercel) and backend (Railway) are
+  cross-origin, which makes cookie-based auth fiddlier to configure and explain. The operator
+  picked Bearer-header JWT specifically because of the cross-origin deploy and wanting a simple,
+  demoable auth flow, explicitly accepting the XSS tradeoff for a project at this scale.
+- **Static fallback on every external API section**: the operator made this a hard requirement up
+  front — News, Prices, AI Insight, and Meme must each degrade to a static JSON response if the
+  live API fails or a key is missing, so a deployed demo never shows a broken or empty card
+  regardless of which third-party keys are configured.
+- **OpenRouter for AI Insight**: the operator already had an OpenRouter account/key, so they chose
+  it over Hugging Face Inference for the AI Insight section.
+- **CryptoPanic deferred**: the operator didn't have a CryptoPanic key when News was built.
+  Rather than blocking on that, they told me to build and verify the News module end-to-end
+  against its static fallback, with the live integration deferred to "just add the env var
+  later, no code change" — their explicit call to keep the build moving.
+- **Onboarding quiz fields**: the operator expanded the quiz beyond the four fields I originally
+  proposed (experience level, risk tolerance, favorite coins, interests), adding
+  `investmentHorizon` and `investmentGoal` because they wanted the AI Insight prompt to have more
+  signal to tailor tone and advice on.
 
-### Where the operator drove decisions
-
-- Confirmed the Bearer-header JWT approach over the cookie alternative that was also presented.
-- Chose OpenRouter over Hugging Face and over a fallback-only first pass.
-- Expanded the onboarding quiz beyond the originally proposed four fields.
-- Confirmed which infrastructure accounts (Atlas, OpenRouter, Railway/Vercel) were ready, which
-  shaped the build order for the dashboard modules (CryptoPanic-backed News built fallback-first).
-
-## Build Phases
+## Implementation — how phases actually went
 
 ### Phase 1 — App Skeleton + DB Models + Shared Utils
-Express app with CORS/JSON middleware and a health check, Mongoose connection to MongoDB Atlas,
-the `User`, `Preferences`, and `Vote` schemas (with the unique compound index on `Vote` for
-upsert-based voting), and the shared `AppError` / `fetchExternal` utilities used by every later
-module. Verified: server boots, connects to Atlas, `/api/health` returns 200.
+I set up the Express app, Mongoose connection, and the `User`/`Preferences`/`Vote` schemas per
+the contracts in `CLAUDE.md`, including the unique compound index on `Vote` that the later voting
+upsert logic depends on. The operator reviewed the schema shapes against the contract and
+confirmed the controller/service folder split before any business logic existed — they wanted
+that boundary right from the start so the "controllers never call external APIs" rule would hold
+later.
 
 ### Phase 2 — Auth
-Signup and login routes with bcrypt password hashing and JWT issuance, plus the `requireAuth`
-middleware that all protected routes depend on. Verified: signup creates a hashed-password user
-and returns a token; login round-trips; a protected probe route returns 401 without a token and
-200 with one; duplicate signup returns 409.
+I built signup/login with bcrypt + JWT, and the `requireAuth` middleware every protected route
+depends on. The operator asked me to demonstrate the protected-route check concretely (401
+without a token, 200 with one, 409 on duplicate signup) before moving on — the first "trust but
+verify" checkpoint in the build, before anything was built on top of it.
 
 ### Phase 3 — Onboarding / Preferences
 `GET`/`PUT /api/preferences`, upserting a `Preferences` document and flipping
-`hasCompletedOnboarding` on first save. Verified: GET returns `null` before onboarding, PUT
-upserts and returns the saved preferences, and a subsequent login reflects
-`hasCompletedOnboarding: true`.
+`hasCompletedOnboarding` on first save. Straightforward against the contract; the operator
+verified the GET-before-onboarding (`null`) → PUT → GET-after (`hasCompletedOnboarding: true`)
+round trip manually.
 
 ### Phase 4 — Dashboard: News
-`GET /api/dashboard/news`, backed by a CryptoPanic integration that falls back to a static
-headline set whenever the API key is absent, the live call returns nothing, or it errors.
-Verified: with no CryptoPanic key configured, the endpoint returns the static items flagged
-`source:"fallback"`.
+`GET /api/dashboard/news`, CryptoPanic-backed with a static fallback. Since the operator had no
+CryptoPanic key at this point, I built and they verified this phase *only* against the fallback
+path (`source:"fallback"`) — a direct consequence of the "CryptoPanic deferred" decision above.
+The operator flagged that the key should be addable later with zero code changes, which shaped
+how I structured the news service.
 
 ### Phase 5 — Dashboard: Prices
-`GET /api/dashboard/prices`, pulling the user's `favoriteCoins` from their preferences (or a
-default coin set) and querying CoinGecko's `coins/markets` endpoint, with a static snapshot as
-fallback. Verified: live call returns real-time prices for the user's saved favorites; a forced
-failure of the live call returns the static fallback flagged `source:"fallback"`.
+`GET /api/dashboard/prices`, pulling `favoriteCoins` from preferences (or a default set) via
+CoinGecko's `coins/markets` endpoint, with a static snapshot fallback. The operator verified both
+the live path (real prices for their saved favorites) and the forced-failure fallback path.
 
 ### Phase 6 — Dashboard: AI Insight
-`GET /api/dashboard/insight`, generating a short market insight via OpenRouter, with the prompt
-shaped by the user's experience level, risk tolerance, interests, investment horizon, and goal.
-Because free-tier model availability on OpenRouter shifts and individual free models can hit
-shared rate limits, the service tries a short ordered list of free models and falls back to a
-static insight pool (keyed by risk tolerance, rotating daily) if all of them fail or no API key
-is configured. Verified: live call returns a generated insight flagged `source:"live"`; a forced
-failure of the live call returns the static fallback flagged `source:"fallback"`.
+`GET /api/dashboard/insight`, generating a market insight via OpenRouter, prompt-shaped by
+experience level, risk tolerance, interests, horizon, and goal. The operator raised a real
+concern here: free-tier OpenRouter models can hit shared rate limits or disappear from the free
+tier without notice. They asked me to handle this defensively rather than just wrapping one model
+call in a try/catch, so I built an ordered list of free models tried in sequence, falling back to
+a static insight pool (keyed by risk tolerance, rotating daily) only if all of them fail or no
+key is configured. The operator verified both the live-generation path and the all-models-fail
+fallback.
 
 ### Phase 7 — Dashboard: Meme
-`GET /api/dashboard/meme`, serving one entry from a curated static pool of crypto memes
-(`memes.json`), rotating by day of month. By design there is no live external API for this
-section — the static pool is the primary source, not a fallback. Verified: the endpoint returns
-a valid item with `id`, `imageUrl`, and `caption`.
+`GET /api/dashboard/meme`, serving from a curated static pool (`memes.json`), rotating by day of
+month. The operator decided from the start that this section should have *no* live API at all —
+the static pool is the primary source by design, not a degraded fallback, since a meme card
+doesn't need to be "live" to do its job.
 
 ### Phase 8 — Voting
-`POST`/`GET /api/votes`, backed by `voteService.js`. Voting upserts on the unique
-`(userId, section, itemId)` index defined back in Phase 1, so re-voting the same item updates
-the existing document rather than creating a duplicate. Verified: a first POST creates a vote, a
-second POST with a different value updates the same document in place (same `_id`, new `value`),
-and GET returns the current state for the user.
+`POST`/`GET /api/votes`, upserting on the `(userId, section, itemId)` index from Phase 1. The
+operator specifically checked the "re-vote updates in place, doesn't duplicate" behavior — same
+`_id`, new `value` — since that was the whole point of defining that index back in Phase 1.
 
 ### Phase 9 — Frontend
-A React (Vite) SPA in `frontend/`. A single `apiRequest` helper (`api/client.js`) wraps `fetch`
-with the JSON body/headers and base URL; `useApi` layers in the Bearer token from
-`AuthContext`. `AuthContext` holds the JWT and user object (persisted to `localStorage`) and
-exposes `signup`/`login`/`logout`. Routing (`react-router-dom`) covers `/login`, `/signup`,
-`/onboarding`, and `/dashboard`, with `ProtectedRoute`/`OnboardingRoute` redirecting based on
-auth state and `hasCompletedOnboarding`. The onboarding page is a single form covering all six
-preference fields (experience level, risk tolerance, investment horizon, investment goal,
-favorite coins, interests) and PUTs them in one request. The dashboard loads all four section
-endpoints plus `/api/votes` in parallel, renders one card component per section
-(`NewsCard`, `PricesCard`, `InsightCard`, `MemeCard`), and a shared `VoteButtons` component posts
-to `/api/votes` and updates local state optimistically. Verified: full flow in the browser —
-signup → onboarding → dashboard renders all four cards (News flagged `source:"fallback"` since no
-CryptoPanic key is configured, Prices and AI Insight live) → thumbs up/down on multiple items
-survives a page reload → log out and log back in skips onboarding and goes straight to the
-dashboard with votes intact.
+I built a React (Vite) SPA: `apiRequest`/`useApi` for the Bearer-token-aware fetch wrapper,
+`AuthContext` for JWT/user state, `react-router-dom` routing with
+`ProtectedRoute`/`OnboardingRoute` gating on auth state and `hasCompletedOnboarding`, a single
+onboarding form covering all six preference fields, and a dashboard that loads all four section
+endpoints plus `/api/votes` in parallel into `NewsCard`/`PricesCard`/`InsightCard`/`MemeCard` with
+a shared `VoteButtons` component doing optimistic updates. The operator walked through the full
+flow in the browser themselves — signup → onboarding → dashboard (News on fallback since no
+CryptoPanic key, Prices and AI Insight live) → vote on multiple items → reload → votes persist →
+log out/in skips onboarding and keeps votes — before considering this phase done.
+
+### Phase 10 — Visual Redesign
+The operator wanted a real visual pass rather than the functional-but-plain UI from Phase 9.
+Instead of asking me to invent a design from scratch, they did the redesign themselves on
+claude.ai/design (via the DesignSync staging workflow) and asked me to pull their edited files
+back and reconcile them into the actual React app — new CSS tokens, a `lucide-react` icon system
+across all cards and auth pages, and a full step-based onboarding wizard (3 steps with progress
+indicator, option cards, coin grid, interest chips) replacing the single long form.
+
+Two things stood out while reconciling:
+- The design mockup for onboarding didn't include a step for `investmentHorizon`, even though
+  it's a required field in the `/api/preferences` contract. The operator caught this and had me
+  add a third "Investment horizon" option-card section to step 3 so the contract still held — the
+  redesign couldn't be allowed to silently drop a field the backend depends on.
+- The dashboard redesign introduced a "personalization" header strip (profile/risk/goal/coins
+  summary), which meant the dashboard now also needed to fetch `/api/preferences` on load — a
+  small but real backend-contract consequence of a purely visual change.
+- After reconciling, the operator asked me to remove the temporary `frontend/design-sync/`
+  staging folder and commit the result in one pass.
+
+## Where the operator made the calls vs. where they delegated to me
+
+- **The operator decided**: Express/Mongoose over .NET/SQL (a deliberate learning tradeoff),
+  Bearer-header JWT over cookies (cross-origin simplicity over XSS-resistance), making static
+  fallbacks a hard requirement everywhere, deferring CryptoPanic, expanding the onboarding quiz
+  fields, choosing OpenRouter, treating Meme as static-only by design, and doing the visual
+  redesign themselves rather than delegating the design work to me.
+- **The operator delegated to me**: the actual Express/Mongoose/React code for every phase, the
+  controller/service split mechanics, the OpenRouter multi-model fallback implementation details,
+  and reconciling the redesigned CSS/components back into the codebase.
+- **The operator verified manually before moving on**: every phase's checklist item in
+  `CLAUDE.md` — auth 401/200 behavior, preferences round-trip, each dashboard section's live
+  *and* fallback path, vote upsert behavior, and the full signup → onboarding → dashboard → vote
+  → reload flow in the browser.
