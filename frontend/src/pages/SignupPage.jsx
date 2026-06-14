@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Bitcoin } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 
 export default function SignupPage() {
@@ -27,6 +28,12 @@ export default function SignupPage() {
   return (
     <div className="auth-page">
       <form className="auth-form" onSubmit={handleSubmit}>
+        <div className="brand">
+          <span className="brand-logo">
+            <Bitcoin size={18} />
+          </span>
+          CryptoAdvisor
+        </div>
         <h1>Sign up</h1>
         <label>
           Email

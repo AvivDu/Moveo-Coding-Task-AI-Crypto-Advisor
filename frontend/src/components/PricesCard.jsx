@@ -1,9 +1,15 @@
+import { TrendingUp } from "lucide-react";
 import VoteButtons from "./VoteButtons.jsx";
 
 export default function PricesCard({ data, votes, onVote }) {
   return (
     <section className="dashboard-card">
-      <h2>Coin Prices</h2>
+      <h2>
+        <span className="card-icon card-icon-teal">
+          <TrendingUp size={14} />
+        </span>
+        Coin Prices
+      </h2>
       {data.source === "fallback" && <p className="source-flag">Demo data</p>}
       <ul className="prices-list">
         {data.items.map((item) => (

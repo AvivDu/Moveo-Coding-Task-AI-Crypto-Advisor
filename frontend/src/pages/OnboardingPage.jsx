@@ -1,17 +1,73 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  Bitcoin,
+  Sprout,
+  BarChart2,
+  Zap,
+  TrendingUp,
+  Wallet,
+  BookOpen,
+  Shield,
+  Sliders,
+  Flame,
+  Clock,
+  CalendarClock,
+  CalendarRange,
+  ArrowRight,
+  Sparkles,
+  Link2,
+  Image as ImageIcon,
+  LineChart,
+  Newspaper,
+  Scale,
+  Cpu,
+} from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useApi } from "../api/useApi.js";
 
-const INTEREST_OPTIONS = ["defi", "nfts", "trading", "news", "regulation", "technology"];
+const EXPERIENCE_OPTIONS = [
+  { id: "beginner", icon: Sprout, title: "Beginner", desc: "Just getting started with crypto" },
+  { id: "intermediate", icon: BarChart2, title: "Intermediate", desc: "Know the basics, exploring more" },
+  { id: "advanced", icon: Zap, title: "Advanced", desc: "Active trader or developer" },
+];
+
+const GOAL_OPTIONS = [
+  { id: "growth", icon: TrendingUp, title: "Growth", desc: "Maximize portfolio value" },
+  { id: "income", icon: Wallet, title: "Income", desc: "Generate passive returns" },
+  { id: "learning", icon: BookOpen, title: "Learning", desc: "Understand the space better" },
+];
+
+const RISK_OPTIONS = [
+  { id: "low", icon: Shield, title: "Conservative", desc: "Preserve capital, steady gains" },
+  { id: "medium", icon: Sliders, title: "Balanced", desc: "Mix of growth and stability" },
+  { id: "high", icon: Flame, title: "Aggressive", desc: "Max upside, higher volatility" },
+];
+
+const HORIZON_OPTIONS = [
+  { id: "short", icon: Clock, title: "Short term", desc: "Weeks to a few months" },
+  { id: "medium", icon: CalendarRange, title: "Medium term", desc: "Several months to a year" },
+  { id: "long", icon: CalendarClock, title: "Long term", desc: "A year or more" },
+];
 
 const COIN_OPTIONS = [
-  { id: "bitcoin", label: "Bitcoin (BTC)" },
-  { id: "ethereum", label: "Ethereum (ETH)" },
-  { id: "solana", label: "Solana (SOL)" },
-  { id: "cardano", label: "Cardano (ADA)" },
-  { id: "dogecoin", label: "Dogecoin (DOGE)" },
-  { id: "ripple", label: "XRP" },
+  { id: "bitcoin", name: "Bitcoin", symbol: "BTC", image: "https://assets.coingecko.com/coins/images/1/small/bitcoin.png" },
+  { id: "ethereum", name: "Ethereum", symbol: "ETH", image: "https://assets.coingecko.com/coins/images/279/small/ethereum.png" },
+  { id: "solana", name: "Solana", symbol: "SOL", image: "https://assets.coingecko.com/coins/images/4128/small/solana.png" },
+  { id: "binancecoin", name: "BNB", symbol: "BNB", image: "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png" },
+  { id: "ripple", name: "XRP", symbol: "XRP", image: "https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png" },
+  { id: "cardano", name: "Cardano", symbol: "ADA", image: "https://assets.coingecko.com/coins/images/975/small/cardano.png" },
+  { id: "avalanche-2", name: "Avalanche", symbol: "AVAX", image: "https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png" },
+  { id: "dogecoin", name: "Dogecoin", symbol: "DOGE", image: "https://assets.coingecko.com/coins/images/5/small/dogecoin.png" },
+];
+
+const INTEREST_OPTIONS = [
+  { id: "defi", icon: Link2, label: "DeFi" },
+  { id: "nfts", icon: ImageIcon, label: "NFTs" },
+  { id: "trading", icon: LineChart, label: "Trading" },
+  { id: "news", icon: Newspaper, label: "Market News" },
+  { id: "regulation", icon: Scale, label: "Regulation" },
+  { id: "technology", icon: Cpu, label: "Technology" },
 ];
 
 export default function OnboardingPage() {
@@ -19,6 +75,7 @@ export default function OnboardingPage() {
   const api = useApi();
   const { setHasCompletedOnboarding } = useAuth();
 
+  const [step, setStep] = useState(1);
   const [form, setForm] = useState({
     experienceLevel: "beginner",
     riskTolerance: "medium",
@@ -30,6 +87,10 @@ export default function OnboardingPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  function setField(field, value) {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
   function toggleListValue(field, value) {
     setForm((prev) => {
       const list = prev[field];
@@ -38,8 +99,7 @@ export default function OnboardingPage() {
     });
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function handleFinish() {
     setError("");
     setLoading(true);
     try {
@@ -48,102 +108,199 @@ export default function OnboardingPage() {
       navigate("/dashboard");
     } catch (err) {
       setError(err.message);
-    } finally {
       setLoading(false);
     }
   }
 
   return (
     <div className="onboarding-page">
-      <form className="onboarding-form" onSubmit={handleSubmit}>
-        <h1>Tell us about you</h1>
-        <p>This shapes the news, prices, and AI insight on your dashboard.</p>
+      <div className="onboarding-shell">
+        <div className="brand">
+          <span className="brand-logo">
+            <Bitcoin size={18} />
+          </span>
+          CryptoAdvisor
+        </div>
 
-        <label>
-          Experience level
-          <select
-            value={form.experienceLevel}
-            onChange={(e) => setForm({ ...form, experienceLevel: e.target.value })}
-          >
-            <option value="beginner">Beginner</option>
-            <option value="intermediate">Intermediate</option>
-            <option value="advanced">Advanced</option>
-          </select>
-        </label>
-
-        <label>
-          Risk tolerance
-          <select
-            value={form.riskTolerance}
-            onChange={(e) => setForm({ ...form, riskTolerance: e.target.value })}
-          >
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-          </select>
-        </label>
-
-        <label>
-          Investment horizon
-          <select
-            value={form.investmentHorizon}
-            onChange={(e) => setForm({ ...form, investmentHorizon: e.target.value })}
-          >
-            <option value="short">Short term</option>
-            <option value="medium">Medium term</option>
-            <option value="long">Long term</option>
-          </select>
-        </label>
-
-        <label>
-          Investment goal
-          <select
-            value={form.investmentGoal}
-            onChange={(e) => setForm({ ...form, investmentGoal: e.target.value })}
-          >
-            <option value="growth">Growth</option>
-            <option value="income">Income</option>
-            <option value="learning">Learning</option>
-          </select>
-        </label>
-
-        <fieldset>
-          <legend>Favorite coins</legend>
-          <div className="checkbox-grid">
-            {COIN_OPTIONS.map((coin) => (
-              <label key={coin.id} className="checkbox-option">
-                <input
-                  type="checkbox"
-                  checked={form.favoriteCoins.includes(coin.id)}
-                  onChange={() => toggleListValue("favoriteCoins", coin.id)}
-                />
-                {coin.label}
-              </label>
-            ))}
+        <div className="step-progress">
+          <div className={`step-node${step === 1 ? " active" : step > 1 ? " done" : ""}`}>
+            {step > 1 ? "✓" : "1"}
           </div>
-        </fieldset>
-
-        <fieldset>
-          <legend>Interests</legend>
-          <div className="checkbox-grid">
-            {INTEREST_OPTIONS.map((interest) => (
-              <label key={interest} className="checkbox-option">
-                <input
-                  type="checkbox"
-                  checked={form.interests.includes(interest)}
-                  onChange={() => toggleListValue("interests", interest)}
-                />
-                {interest}
-              </label>
-            ))}
+          <div className={`step-connector${step >= 2 ? " done" : ""}`} />
+          <div className={`step-node${step === 2 ? " active" : step > 2 ? " done" : ""}`}>
+            {step > 2 ? "✓" : "2"}
           </div>
-        </fieldset>
+          <div className={`step-connector${step >= 3 ? " done" : ""}`} />
+          <div className={`step-node${step === 3 ? " active" : ""}`}>3</div>
+        </div>
 
-        {error && <p className="form-error">{error}</p>}
-        <button type="submit" disabled={loading}>
-          {loading ? "Saving..." : "Continue to dashboard"}
-        </button>
-      </form>
+        {step === 1 && (
+          <div className="step">
+            <div className="step-header">
+              <p className="step-label">Step 1 of 3 · Your Profile</p>
+              <h1>How experienced are you?</h1>
+              <p>We calibrate AI insight complexity to match your level.</p>
+            </div>
+
+            <div className="option-cards cols-3">
+              {EXPERIENCE_OPTIONS.map(({ id, icon: Icon, title, desc }) => (
+                <div
+                  key={id}
+                  className={`option-card${form.experienceLevel === id ? " selected" : ""}`}
+                  onClick={() => setField("experienceLevel", id)}
+                >
+                  <div className="option-card-icon">
+                    <Icon size={18} />
+                  </div>
+                  <div className="check-dot">✓</div>
+                  <div className="option-card-title">{title}</div>
+                  <div className="option-card-desc">{desc}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="section-label">Investment goal</div>
+
+            <div className="option-cards cols-3">
+              {GOAL_OPTIONS.map(({ id, icon: Icon, title, desc }) => (
+                <div
+                  key={id}
+                  className={`option-card${form.investmentGoal === id ? " selected" : ""}`}
+                  onClick={() => setField("investmentGoal", id)}
+                >
+                  <div className="option-card-icon">
+                    <Icon size={18} />
+                  </div>
+                  <div className="check-dot">✓</div>
+                  <div className="option-card-title">{title}</div>
+                  <div className="option-card-desc">{desc}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="step-nav">
+              <div className="social-proof">
+                <div className="social-proof-avatars">
+                  <span style={{ background: "#7c3aed" }}>A</span>
+                  <span style={{ background: "#06b6d4" }}>M</span>
+                  <span style={{ background: "#16a34a" }}>J</span>
+                  <span style={{ background: "#f59e0b" }}>K</span>
+                </div>
+                <span>50,000+ traders trust CryptoAdvisor</span>
+              </div>
+              <button type="button" className="btn-next" onClick={() => setStep(2)}>
+                Next <ArrowRight size={15} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="step">
+            <div className="step-header">
+              <p className="step-label">Step 2 of 3 · Your Coins</p>
+              <h1>Which coins do you follow?</h1>
+              <p>Pick as many as you like. Your dashboard and prices are built around these.</p>
+            </div>
+
+            <div className="coin-grid">
+              {COIN_OPTIONS.map((coin) => (
+                <div
+                  key={coin.id}
+                  className={`coin-tile${form.favoriteCoins.includes(coin.id) ? " selected" : ""}`}
+                  onClick={() => toggleListValue("favoriteCoins", coin.id)}
+                >
+                  <img src={coin.image} alt={coin.name} />
+                  <div className="check-dot">✓</div>
+                  <div className="coin-tile-name">{coin.name}</div>
+                  <div className="coin-tile-ticker">{coin.symbol}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="step-nav">
+              <button type="button" className="btn-back" onClick={() => setStep(1)}>
+                ← Back
+              </button>
+              <button type="button" className="btn-next" onClick={() => setStep(3)}>
+                Next <ArrowRight size={15} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className="step">
+            <div className="step-header">
+              <p className="step-label">Step 3 of 3 · Your Interests</p>
+              <h1>What do you care about?</h1>
+              <p>Your AI news feed is shaped around these topics.</p>
+            </div>
+
+            <div className="interest-grid">
+              {INTEREST_OPTIONS.map(({ id, icon: Icon, label }) => (
+                <div
+                  key={id}
+                  className={`interest-chip${form.interests.includes(id) ? " selected" : ""}`}
+                  onClick={() => toggleListValue("interests", id)}
+                >
+                  <Icon size={14} />
+                  {label}
+                </div>
+              ))}
+            </div>
+
+            <div className="section-label">Risk tolerance</div>
+
+            <div className="option-cards cols-3">
+              {RISK_OPTIONS.map(({ id, icon: Icon, title, desc }) => (
+                <div
+                  key={id}
+                  className={`option-card${form.riskTolerance === id ? " selected" : ""}`}
+                  onClick={() => setField("riskTolerance", id)}
+                >
+                  <div className="option-card-icon">
+                    <Icon size={18} />
+                  </div>
+                  <div className="check-dot">✓</div>
+                  <div className="option-card-title">{title}</div>
+                  <div className="option-card-desc">{desc}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="section-label">Investment horizon</div>
+
+            <div className="option-cards cols-3">
+              {HORIZON_OPTIONS.map(({ id, icon: Icon, title, desc }) => (
+                <div
+                  key={id}
+                  className={`option-card${form.investmentHorizon === id ? " selected" : ""}`}
+                  onClick={() => setField("investmentHorizon", id)}
+                >
+                  <div className="option-card-icon">
+                    <Icon size={18} />
+                  </div>
+                  <div className="check-dot">✓</div>
+                  <div className="option-card-title">{title}</div>
+                  <div className="option-card-desc">{desc}</div>
+                </div>
+              ))}
+            </div>
+
+            {error && <p className="form-error">{error}</p>}
+
+            <div className="step-nav">
+              <button type="button" className="btn-back" onClick={() => setStep(2)}>
+                ← Back
+              </button>
+              <button type="button" className="btn-finish" onClick={handleFinish} disabled={loading}>
+                {loading ? "Saving..." : "Build my dashboard"} <Sparkles size={15} />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

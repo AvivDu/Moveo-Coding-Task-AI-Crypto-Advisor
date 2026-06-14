@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
+import { Bitcoin, LogOut, Sparkles } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useApi } from "../api/useApi.js";
 import NewsCard from "../components/NewsCard.jsx";
 import PricesCard from "../components/PricesCard.jsx";
 import InsightCard from "../components/InsightCard.jsx";
 import MemeCard from "../components/MemeCard.jsx";
+
+const EXPERIENCE_LABELS = { beginner: "Beginner", intermediate: "Intermediate", advanced: "Advanced" };
+const RISK_LABELS = { low: "Conservative", medium: "Balanced", high: "Aggressive" };
+const GOAL_LABELS = { growth: "Growth", income: "Income", learning: "Learning" };
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -15,23 +20,26 @@ export default function DashboardPage() {
   const [insight, setInsight] = useState(null);
   const [meme, setMeme] = useState(null);
   const [votes, setVotes] = useState({});
+  const [preferences, setPreferences] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
     async function loadDashboard() {
       try {
-        const [newsRes, pricesRes, insightRes, memeRes, votesRes] = await Promise.all([
+        const [newsRes, pricesRes, insightRes, memeRes, votesRes, preferencesRes] = await Promise.all([
           api("/api/dashboard/news"),
           api("/api/dashboard/prices"),
           api("/api/dashboard/insight"),
           api("/api/dashboard/meme"),
           api("/api/votes"),
+          api("/api/preferences"),
         ]);
 
         setNews(newsRes);
         setPrices(pricesRes);
         setInsight(insightRes);
         setMeme(memeRes);
+        setPreferences(preferencesRes.preferences);
 
         const voteMap = {};
         for (const vote of votesRes.votes) {
@@ -67,14 +75,40 @@ export default function DashboardPage() {
   return (
     <div className="dashboard-page">
       <header className="dashboard-header">
-        <h1>Your Daily Crypto Dashboard</h1>
+        <div className="dashboard-header-text">
+          <span className="brand-logo">
+            <Bitcoin size={18} />
+          </span>
+          <h1>CryptoAdvisor</h1>
+        </div>
         <div>
           <span className="user-email">{user?.email}</span>
           <button type="button" onClick={logout}>
+            <LogOut size={14} />
             Log out
           </button>
         </div>
       </header>
+
+      {preferences && (
+        <div className="dashboard-welcome">
+          <p>
+            Profile: <strong>{EXPERIENCE_LABELS[preferences.experienceLevel] ?? preferences.experienceLevel}</strong> ·
+            {" "}Risk: <strong>{RISK_LABELS[preferences.riskTolerance] ?? preferences.riskTolerance}</strong> ·
+            {" "}Goal: <strong>{GOAL_LABELS[preferences.investmentGoal] ?? preferences.investmentGoal}</strong>
+            {preferences.favoriteCoins?.length > 0 && (
+              <>
+                {" "}· Tracking <strong>{preferences.favoriteCoins.join(", ")}</strong>
+              </>
+            )}
+          </p>
+          <div className="dashboard-welcome-badge">
+            <Sparkles size={11} />
+            AI-personalized
+          </div>
+        </div>
+      )}
+
       <div className="dashboard-grid">
         <NewsCard data={news} votes={votes} onVote={handleVote} />
         <PricesCard data={prices} votes={votes} onVote={handleVote} />

@@ -1,9 +1,15 @@
+import { Newspaper } from "lucide-react";
 import VoteButtons from "./VoteButtons.jsx";
 
 export default function NewsCard({ data, votes, onVote }) {
   return (
     <section className="dashboard-card">
-      <h2>Market News</h2>
+      <h2>
+        <span className="card-icon">
+          <Newspaper size={14} />
+        </span>
+        Market News
+      </h2>
       {data.source === "fallback" && <p className="source-flag">Demo data</p>}
       <ul className="news-list">
         {data.items.map((item) => (
