@@ -722,6 +722,75 @@ legend {
   color: var(--accent);
 }
 
+/* Coin search/add ────────────────────────── */
+
+.coin-search {
+  margin-top: 14px;
+}
+
+.coin-search-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  transition: border-color 0.15s;
+}
+
+.coin-search-input:focus-within {
+  border-color: var(--accent);
+}
+
+.coin-search-input input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  font-family: var(--sans);
+  color: var(--text-h);
+}
+
+.coin-search-results {
+  margin-top: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.coin-search-result {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.coin-search-result:hover {
+  background: var(--accent-bg);
+}
+
+.coin-search-add {
+  margin-top: 8px;
+  padding: 9px 16px;
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--sans);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.coin-search-add:hover {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
 .coin-tile-name {
   font-size: 12px;
   font-weight: 600;
@@ -963,4 +1032,33 @@ legend {
   padding: 4px 10px;
   flex-shrink: 0;
   white-space: nowrap;
+}
+
+.dashboard-welcome-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.btn-edit-preferences {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-h);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: var(--sans);
+  white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.btn-edit-preferences:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }

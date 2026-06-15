@@ -1,25 +1,31 @@
-import { env } from "../config/env.js";
 import { fetchExternal } from "../utils/fetchExternal.js";
 import newsFallback from "../data/newsFallback.json" with { type: "json" };
 
-const CRYPTOPANIC_URL = "https://cryptopanic.com/api/v1/posts/";
+const COINDESK_RSS_URL = "https://www.coindesk.com/arc/outboundfeeds/rss/";
+
+function extractTag(itemXml, tag) {
+  const match = itemXml.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`));
+  if (!match) return "";
+  return match[1].replace(/<!\[CDATA\[([\s\S]*?)\]\]>/, "$1").trim();
+}
+
+function parseRssItems(xml) {
+  const items = xml.match(/<item>[\s\S]*?<\/item>/g) || [];
+  return items.map((itemXml) => ({
+    id: extractTag(itemXml, "guid"),
+    title: extractTag(itemXml, "title"),
+    url: extractTag(itemXml, "link"),
+    source: "CoinDesk",
+    publishedAt: extractTag(itemXml, "pubDate"),
+  }));
+}
 
 export async function getNews() {
-  if (!env.cryptoPanicApiKey) {
-    return { items: newsFallback, source: "fallback" };
-  }
-
   try {
-    const url = `${CRYPTOPANIC_URL}?auth_token=${env.cryptoPanicApiKey}&public=true`;
-    const data = await fetchExternal(url);
-
-    const items = (data.results || []).slice(0, 5).map((post) => ({
-      id: String(post.id),
-      title: post.title,
-      url: post.url,
-      source: post.source?.title || "CryptoPanic",
-      publishedAt: post.published_at,
-    }));
+    const xml = await fetchExternal(COINDESK_RSS_URL, { responseType: "text" });
+    const items = parseRssItems(xml)
+      .filter((item) => item.id && item.title && item.url)
+      .slice(0, 5);
 
     if (items.length === 0) {
       return { items: newsFallback, source: "fallback" };

@@ -163,13 +163,71 @@ didn't have direct access to either dashboard.
   the change should also be reflected in `AI_COLLABORATION.md`, `DEV_RECAP` (if present), and/or
   `README.md`, rather than only updating the code.
 
+### Phase 12 — News Provider Swap (CryptoPanic → CoinDesk RSS)
+The operator asked me to replace CryptoPanic with `cryptocurrency.cv`'s "free" news API. Before
+writing any code, I checked that endpoint directly and found it actually requires x402 USDC
+micropayments per request on Arbitrum — not a free, no-key API as described, and incompatible
+with the assignment's "free public APIs" requirement. I flagged this to the operator instead of
+wiring up a paid integration.
+
+The operator asked me to find a genuinely free alternative. I checked CryptoCompare's news
+endpoint (now requires a key via CoinDesk's developer portal) and landed on CoinDesk's public RSS
+feed (`coindesk.com/arc/outboundfeeds/rss/`), which needs no key. Since there's no XML parser
+dependency in the backend, I wrote a small regex-based `<item>` extractor in `newsService.js`
+rather than adding a new package — appropriate given the static fallback already covers
+parse/format failures. A first pass returned only fallback data because my tag-extraction regex
+didn't allow attributes on the opening tag (`<guid isPermaLink="false">` didn't match
+`<guid>...`), so every item's `id` came back empty and got filtered out; I caught this by running
+`getNews()` directly and inspecting the result before calling it done, fixed the regex, and
+re-verified `source:"live"` with real headlines.
+
+Also removed the now-unused `CRYPTOPANIC_API_KEY` from `env.js` and `.env.example`, and added a
+one-line note to `README.md` that CryptoPanic was substituted because they moved to a paid API in
+April 2026.
+
+### Phase 13 — Edit Preferences, Custom/Searchable Coins, and Assignment Re-check
+With the core build and deployment done, the operator asked for a round of quality-of-life
+improvements before final submission and asked me to re-confirm the original assignment's
+deliverables were fully met.
+
+**Assignment re-check**: all functional requirements (auth, onboarding, four dashboard sections
+with fallbacks, voting, deployment) were already complete. I flagged the remaining items as
+non-code submission tasks: a short written project description, the optional bonus write-up on
+using vote feedback for future model training, and sharing DB access with the reviewer.
+
+**Coin search verification first**: the operator specifically asked me to confirm CoinGecko's
+`/search` endpoint was genuinely free before I built anything on top of it, given the
+`cryptocurrency.cv` news API had turned out to require payment. I checked it directly
+(`GET https://api.coingecko.com/api/v3/search?query=bit`) and confirmed it returns real coin data
+with no key or payment required, then proceeded.
+
+**Edit preferences**: added a single-page `EditPreferencesPage` (the operator chose a single page
+over a multi-step wizard for editing, since the onboarding wizard's step framing doesn't fit a
+"change a few answers" flow) at `/preferences/edit`, reached via a new "Edit preferences" button
+on the dashboard. It reuses the existing `GET`/`PUT /api/preferences` endpoints — no backend
+changes needed for this part.
+
+**Shared components**: to avoid duplicating the onboarding wizard's markup between
+`OnboardingPage` and the new edit page, I extracted `OptionCardGroup`, `InterestChips`, and
+`CoinPicker` into their own components, and moved the shared option arrays into
+`constants/preferencesOptions.js`. Both pages now render from the same components.
+
+**Coin picker upgrades**: the favorite-coins picker was previously limited to 8 hardcoded coins.
+`CoinPicker` now also supports a debounced CoinGecko-backed search (new
+`GET /api/dashboard/coins/search` endpoint, backed by `searchService.js`) so users can find and
+add any coin by name, plus a manual "add as custom coin" path for a raw CoinGecko id if search
+doesn't find it. The operator chose "search-to-add inside the coin picker" over a separate
+dashboard search feature, to keep the change scoped.
+
 ## Where the operator made the calls vs. where they delegated to me
 
 - **The operator decided**: Express/Mongoose over .NET/SQL (a deliberate learning tradeoff),
   Bearer-header JWT over cookies (cross-origin simplicity over XSS-resistance), making static
   fallbacks a hard requirement everywhere, deferring CryptoPanic, expanding the onboarding quiz
-  fields, choosing OpenRouter, treating Meme as static-only by design, and doing the visual
-  redesign themselves rather than delegating the design work to me.
+  fields, choosing OpenRouter, treating Meme as static-only by design, doing the visual
+  redesign themselves rather than delegating the design work to me, the single-page edit
+  preferences layout, and scoping coin search to "search-to-add inside the coin picker" rather
+  than a separate dashboard feature.
 - **The operator delegated to me**: the actual Express/Mongoose/React code for every phase, the
   controller/service split mechanics, the OpenRouter multi-model fallback implementation details,
   and reconciling the redesigned CSS/components back into the codebase.

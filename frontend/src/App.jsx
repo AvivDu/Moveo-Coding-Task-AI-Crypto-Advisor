@@ -5,6 +5,7 @@ import LoginPage from "./pages/LoginPage.jsx";
 import SignupPage from "./pages/SignupPage.jsx";
 import OnboardingPage from "./pages/OnboardingPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
+import EditPreferencesPage from "./pages/EditPreferencesPage.jsx";
 import "./App.css";
 
 function HomeRedirect() {
@@ -29,6 +30,7 @@ export default function App() {
         </Route>
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/preferences/edit" element={<EditPreferencesPage />} />
         </Route>
       </Routes>
     </AuthProvider>

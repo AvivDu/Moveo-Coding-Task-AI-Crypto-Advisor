@@ -1,7 +1,7 @@
 const DEFAULT_TIMEOUT_MS = 5000;
 
 export async function fetchExternal(url, options = {}) {
-  const { timeoutMs = DEFAULT_TIMEOUT_MS, ...fetchOptions } = options;
+  const { timeoutMs = DEFAULT_TIMEOUT_MS, responseType = "json", ...fetchOptions } = options;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -10,7 +10,7 @@ export async function fetchExternal(url, options = {}) {
     if (!response.ok) {
       throw new Error(`Request to ${url} failed with status ${response.status}`);
     }
-    return await response.json();
+    return responseType === "text" ? await response.text() : await response.json();
   } finally {
     clearTimeout(timeout);
   }

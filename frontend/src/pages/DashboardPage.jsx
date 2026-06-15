@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Bitcoin, LogOut, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Bitcoin, LogOut, Sparkles, Settings } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useApi } from "../api/useApi.js";
 import NewsCard from "../components/NewsCard.jsx";
@@ -14,6 +15,7 @@ const GOAL_LABELS = { growth: "Growth", income: "Income", learning: "Learning" }
 export default function DashboardPage() {
   const { user, logout } = useAuth();
   const api = useApi();
+  const navigate = useNavigate();
 
   const [news, setNews] = useState(null);
   const [prices, setPrices] = useState(null);
@@ -102,9 +104,15 @@ export default function DashboardPage() {
               </>
             )}
           </p>
-          <div className="dashboard-welcome-badge">
-            <Sparkles size={11} />
-            AI-personalized
+          <div className="dashboard-welcome-actions">
+            <button type="button" className="btn-edit-preferences" onClick={() => navigate("/preferences/edit")}>
+              <Settings size={12} />
+              Edit preferences
+            </button>
+            <div className="dashboard-welcome-badge">
+              <Sparkles size={11} />
+              AI-personalized
+            </div>
           </div>
         </div>
       )}
