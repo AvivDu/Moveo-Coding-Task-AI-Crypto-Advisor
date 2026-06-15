@@ -5,6 +5,11 @@ about their experience level, risk tolerance, goals, and favorite coins, and lan
 dashboard with four tailored sections — Market News, Coin Prices, AI Insight of the Day, and a
 Crypto Meme — each with thumbs up/down voting.
 
+## Live Demo
+
+- Frontend: https://moveo-coding-task-ai-crypto-advisor-six.vercel.app
+- Backend API: https://moveo-coding-task-ai-crypto-advisor-production.up.railway.app
+
 ## Tech Stack
 
 - **Backend**: Node.js, Express, MongoDB (Mongoose), JWT auth (bcrypt password hashing)

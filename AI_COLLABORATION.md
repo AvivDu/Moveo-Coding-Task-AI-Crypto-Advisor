@@ -138,6 +138,31 @@ Two things stood out while reconciling:
 - After reconciling, the operator asked me to remove the temporary `frontend/design-sync/`
   staging folder and commit the result in one pass.
 
+### Phase 11 — Deployment
+The operator deployed the backend to Railway (root directory `backend`, `npm start`) and the
+frontend to Vercel (root directory `frontend`, Vite preset) themselves, walking through each
+dashboard step by step with me narrating what to click and what to look for in logs/output. I
+didn't have direct access to either dashboard.
+
+- **Atlas IP whitelist**: the first deploy hit a `MongooseServerSelectionError` because Atlas's
+  Network Access list didn't include Railway's egress IPs. The operator added `0.0.0.0/0` (allow
+  from anywhere) in Atlas Network Access, which resolved it — acceptable for a free-tier demo
+  project where the connection string itself is the real secret.
+- **CORS_ORIGIN sequencing**: `CORS_ORIGIN` was first set to `http://localhost:5173` as a
+  placeholder on Railway, then updated to the real Vercel URL once the frontend deploy produced
+  one, since the value wasn't known until after the frontend existed.
+- **SPA refresh 404 on Vercel**: after a full manual end-to-end pass (signup → onboarding →
+  dashboard → vote), reloading the page on a non-root route returned Vercel's `404: NOT_FOUND`.
+  This is the standard SPA-on-static-host issue — Vercel was looking for a file at that path
+  instead of serving `index.html` for client-side routing. I added `frontend/vercel.json` with a
+  catch-all rewrite to `index.html`; the operator confirmed the fix after redeploy (votes and
+  routing both survive a refresh).
+- **README live URLs**: the operator asked for the live Vercel/Railway URLs to be added to
+  `README.md` under a new "Live Demo" section, reviewed before committing.
+- From this point on, the operator asked that before any commit in this project, I check whether
+  the change should also be reflected in `AI_COLLABORATION.md`, `DEV_RECAP` (if present), and/or
+  `README.md`, rather than only updating the code.
+
 ## Where the operator made the calls vs. where they delegated to me
 
 - **The operator decided**: Express/Mongoose over .NET/SQL (a deliberate learning tradeoff),
