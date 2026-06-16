@@ -8,10 +8,10 @@ where they handed me a contract and let me execute against it. Keeping this log 
 of the operator's decisions, made specifically so an interviewer can see how the architecture and
 decisions in this repo actually originated.
 
-The operator's background is C#/.NET, with no prior Node/Express/Mongoose or React experience,
-and no SQL background either. They told me this up front and asked me to explain
-Node/Express/Mongoose concepts in terms of ASP.NET Core/EF equivalents throughout the build,
-treating this as a learning exercise rather than a black box.
+The operator's background is primarily in C#/.NET and React, with Node, Express, and Mongoose
+being newer to them, and some SQL experience they don't draw on frequently. They told me this up
+front and asked me to explain Node/Express/Mongoose concepts in terms of ASP.NET Core/EF
+equivalents throughout the build, treating this as a learning exercise rather than a black box.
 
 ## Planning Phase
 
@@ -29,7 +29,7 @@ plan.
   map Node/Express/Mongoose concepts to ASP.NET Core/EF equivalents (middleware ~ pipeline,
   Mongoose schema ~ EF entity, controller/service split ~ the layering they already knew) so they
   could follow my reasoning, not just accept my code.
-- **MongoDB over a relational DB**: the operator raised that they have no SQL background either.
+- **MongoDB over a relational DB**: the operator noted they don't work in SQL day-to-day.
   I proposed MongoDB Atlas's free tier plus Mongoose's schema model as a reasonable fit for the
   relatively simple, mostly-flat data here (User, Preferences, Vote), framing Mongoose's
   schema-level validation as close to the EF model they already knew. They agreed.
