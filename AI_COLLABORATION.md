@@ -219,6 +219,17 @@ add any coin by name, plus a manual "add as custom coin" path for a raw CoinGeck
 doesn't find it. The operator chose "search-to-add inside the coin picker" over a separate
 dashboard search feature, to keep the change scoped.
 
+## Post-review spec gap: name field
+
+After reviewing the original assignment PDF against the implementation, I flagged that the spec
+explicitly requires "Register with email, name, and password" but the `User` model and signup
+flow only collected email and password. The operator confirmed this should be fixed. I added
+`name` to the Mongoose schema, the signup service/controller, the auth response shape, the
+frontend signup form, and the dashboard header. Existing users in Atlas were backfilled with a
+name derived from their email prefix via a one-off migration script (run and deleted — not
+committed). The operator's localStorage session had stale user objects without `name`, so the
+dashboard header got a `name || email` fallback to cover sessions persisted before the change.
+
 ## Where the operator made the calls vs. where they delegated to me
 
 - **The operator decided**: Express/Mongoose over .NET/SQL (a deliberate learning tradeoff),

@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 export default function SignupPage() {
   const { signup } = useAuth();
   const navigate = useNavigate();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -16,7 +17,7 @@ export default function SignupPage() {
     setError("");
     setLoading(true);
     try {
-      await signup(email, password);
+      await signup(name, email, password);
       navigate("/onboarding");
     } catch (err) {
       setError(err.message);
@@ -35,6 +36,10 @@ export default function SignupPage() {
           CryptoAdvisor
         </div>
         <h1>Sign up</h1>
+        <label>
+          Name
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+        </label>
         <label>
           Email
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />

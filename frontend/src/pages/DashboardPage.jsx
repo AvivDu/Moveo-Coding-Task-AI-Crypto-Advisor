@@ -84,7 +84,7 @@ export default function DashboardPage() {
           <h1>CryptoAdvisor</h1>
         </div>
         <div>
-          <span className="user-email">{user?.email}</span>
+          <span className="user-email">{user?.name || user?.email}</span>
           <button type="button" onClick={logout}>
             <LogOut size={14} />
             Log out

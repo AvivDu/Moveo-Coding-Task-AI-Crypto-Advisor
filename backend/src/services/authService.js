@@ -8,14 +8,15 @@ const SALT_ROUNDS = 10;
 function toUserResponse(user) {
   return {
     id: user._id,
+    name: user.name,
     email: user.email,
     hasCompletedOnboarding: user.hasCompletedOnboarding,
   };
 }
 
-export async function signup(email, password) {
-  if (!email || !password) {
-    throw new AppError(400, "Email and password are required");
+export async function signup(name, email, password) {
+  if (!name || !email || !password) {
+    throw new AppError(400, "Name, email, and password are required");
   }
   if (password.length < 8) {
     throw new AppError(400, "Password must be at least 8 characters");
@@ -27,7 +28,7 @@ export async function signup(email, password) {
   }
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-  const user = await User.create({ email, passwordHash });
+  const user = await User.create({ name, email, passwordHash });
 
   return {
     token: signToken(user._id.toString()),
